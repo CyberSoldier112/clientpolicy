@@ -1,0 +1,127 @@
+# =====================================================================
+#  ClientPolicy
+# ---------------------------------------------------------------------
+#  Detects client mods that identify themselves to the server (plugin
+#  messaging channels, minecraft:brand, mod loader handshake) and applies
+#  a tiered policy: LOG -> WARN -> KICK.
+#
+#  IMPORTANT / HONESTY NOTE:
+#  This is NOT an anti-cheat. Mods that never talk to the server
+#  (x-ray, killaura, reach, freecam, ...) register no channels and
+#  CANNOT be detected by this method. ClientPolicy only sees mods that
+#  announce themselves (Litematica, Xaero's, JourneyMap, VoxelMap,
+#  WorldEditCUI, Baritone, ...).
+#
+#  Every message below uses MiniMessage formatting:
+#  https://docs.advntr.dev/minimessage/format.html
+#  Available placeholders are documented next to each message.
+# =====================================================================
+
+detection:
+  # Delay between PlayerJoinEvent and the first fingerprint scan.
+  # Clients register their channels a few ticks after joining. 60 ticks = 3s.
+  scan-delay-ticks: 60
+
+  # After the first scan, keep re-evaluating for this long whenever the
+  # client registers a NEW channel. Prevents mods from dodging enforcement
+  # by registering late. A final pass runs when this window expires.
+  rescan-window-seconds: 120
+
+  # Read and evaluate the client brand (minecraft:brand payload).
+  track-brand: true
+
+  # Applied at the end of the rescan window when the brand is still
+  # unreadable/null. ALLOW | LOG | WARN | KICK
+  brand-unknown-action: LOG
+
+policy:
+  # Profile used when the player has no clientpolicy.profile.<name> permission.
+  default-profile: default
+
+  # Action for a registered channel that matches no signature at all.
+  # Keep this soft (LOG) unless you have curated signatures.yml yourself,
+  # otherwise ALLOWLIST profiles will kick people for harmless channels.
+  # ALLOW | LOG | WARN | KICK
+  unknown-channel-action: LOG
+
+  # Channels that are never evaluated (server/proxy plumbing, not client mods).
+  # Supports '*' and '?' wildcards.
+  ignore-channels:
+    - "minecraft:*"
+    - "bungeecord:*"
+    - "velocity:*"
+    - "fabric:registry_sync"
+
+enforcement:
+  # Placeholders: <mod>, <player>, <profile>, <channels>, <category>
+  kick-message: |
+    <red>A mod that is not permitted on this server was detected: <white><mod>
+    <gray>Allowed mods: <aqua>/clientpolicy rules
+
+  # Placeholders: <mod>, <player>, <profile>, <channels>, <category>
+  warn-message: "<gold>[!] <yellow><mod> <yellow>is not permitted here. <gray>You will be removed if it is detected again."
+
+  # Send a chat notification to everyone holding clientpolicy.notify.
+  # Only WARN and KICK are broadcast. LOG-level detections go to the console and
+  # to /clientpolicy history only, otherwise every modded join would spam staff -
+  # unknown-channel-action defaults to LOG and one modded client easily brings a
+  # dozen uncatalogued channels with it.
+  notify-staff: true
+
+  # Placeholders: <player>, <mod>, <action>, <profile>, <channels>, <count>
+  notify-format: "<gray>[CP] <white><player> <gray>-> <red><mod> <dark_gray>(<action>, hit #<count>)"
+
+# ---------------------------------------------------------------------
+#  Profiles
+#  A player gets the profile whose clientpolicy.profile.<name> permission
+#  they hold; otherwise policy.default-profile is used.
+#
+#  When you add a profile here, also register clientpolicy.profile.<name> with
+#  default: false in your permissions plugin. Bukkit answers hasPermission()
+#  with true for any node it has never heard of when the caller is an operator,
+#  so an undeclared profile silently captures every op. Verify with
+#  /clientpolicy profile <player>.
+#
+#  mode: BLOCKLIST -> only ids in 'deny' are violations.
+#        ALLOWLIST -> anything not in 'allow' is a violation.
+#  The ids are the keys of signatures.yml.
+#
+#  ladder: first  -> action for the first violations of a given mod
+#          after  -> action once the counter passes escalate-after
+#          escalate-after: N -> hits 1..N use 'first', hit N+1 uses 'after'
+#          counter-reset-hours -> idle time after which the counter restarts
+# ---------------------------------------------------------------------
+profiles:
+  default:
+    mode: BLOCKLIST
+    allow: [litematica, sodium, iris, worldeditcui, replaymod]
+    deny: [xaeros-minimap, journeymap, voxelmap, baritone]
+    ladder:
+      first: WARN
+      after: KICK
+      escalate-after: 2
+      counter-reset-hours: 24
+  builder:
+    mode: BLOCKLIST
+    allow: [litematica, worldeditcui, sodium, iris, xaeros-minimap]
+    deny: [baritone]
+    ladder:
+      first: LOG
+      after: WARN
+      escalate-after: 3
+      counter-reset-hours: 24
+
+storage:
+  # Detections older than this are deleted on startup. 0 disables cleanup.
+  retention-days: 30
+
+messages:
+  prefix: "<dark_gray>[<aqua>ClientPolicy<dark_gray>] <reset>"
+  no-permission: "<red>You do not have permission to do that."
+  players-only: "<red>Only a player can run this command."
+  player-not-found: "<red>Player <white><player></white> is not online."
+  storage-unavailable: "<red>The detection database is unavailable, check the server log."
+  history-empty: "<gray>No records found for <white><player></white>."
+  rescan-done: "<green>Re-evaluated <white><player></white>."
+  reload-success: "<green>Reloaded. <gray><signatures> signatures, <profiles> profiles, <players> online players re-evaluated."
+  disclaimer: "<dark_gray><i>ClientPolicy only sees mods that announce themselves to the server. It is not an anti-cheat.</i>"

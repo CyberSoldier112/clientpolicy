@@ -1,0 +1,114 @@
+# =====================================================================
+#  ClientPolicy - signature database
+# ---------------------------------------------------------------------
+#  This file is a STARTING SET, not ground truth. Plugin messaging
+#  channel names change between Minecraft versions and mod releases.
+#  Verify every signature against your own server before you rely on it:
+#
+#     1. Join with the mod installed.
+#     2. Run  /clientpolicy inspect <you>
+#     3. Copy the raw channels it prints into an entry below.
+#     4. /clientpolicy reload
+#
+#  Entry format:
+#    <signature-id>:
+#      display:  "Human readable name"          (optional, defaults to the id)
+#      category: MINIMAP | SCHEMATIC | AUTOMATION | PERFORMANCE | UTILITY | OTHER
+#      channels: ["namespace:path", "namespace:*"]   ('*' and '?' wildcards)
+#      brand:    "regex matched against minecraft:brand"   (optional)
+#
+#  An entry with neither channels nor brand can never match. Such entries
+#  are still useful for documentation (see sodium/iris below) and are
+#  shown as "not detectable" in /clientpolicy rules.
+# =====================================================================
+
+signatures:
+
+  # ---------------- Schematics / building ----------------
+  litematica:
+    display: "Litematica"
+    category: SCHEMATIC
+    channels: ["litematica:*"]
+
+  syncmatica:
+    display: "Syncmatica"
+    category: SCHEMATIC
+    channels: ["syncmatica:*"]
+
+  worldeditcui:
+    display: "WorldEdit CUI"
+    category: UTILITY
+    channels: ["worldedit:cui"]
+
+  # ---------------- Minimaps / world maps ----------------
+  xaeros-minimap:
+    display: "Xaero's Minimap"
+    category: MINIMAP
+    channels: ["xaerominimap:main", "xaeroworldmap:main", "xaerominimap:*", "xaeroworldmap:*"]
+
+  journeymap:
+    display: "JourneyMap"
+    category: MINIMAP
+    channels: ["journeymap:*"]
+
+  voxelmap:
+    display: "VoxelMap"
+    category: MINIMAP
+    channels: ["worldinfo:world_id"]
+
+  # ---------------- Automation ----------------
+  baritone:
+    display: "Baritone"
+    category: AUTOMATION
+    channels: ["baritone:*"]
+
+  # ---------------- Utility ----------------
+  replaymod:
+    display: "ReplayMod"
+    category: UTILITY
+    channels: ["replaymod:*"]
+
+  carpet:
+    display: "Carpet (client)"
+    category: UTILITY
+    channels: ["carpet:hello", "carpet:*"]
+
+  vivecraft:
+    display: "Vivecraft"
+    category: UTILITY
+    channels: ["vivecraft:data", "vivecraft:*"]
+
+  simple-voice-chat:
+    display: "Simple Voice Chat"
+    category: UTILITY
+    channels: ["voicechat:*"]
+
+  labymod:
+    display: "LabyMod"
+    category: UTILITY
+    channels: ["labymod:*", "labymod3:main"]
+
+  lunarclient:
+    display: "Lunar Client"
+    category: UTILITY
+    channels: ["lunarclient:*"]
+    brand: "(?i)^lunarclient.*"
+
+  # ---------------- Performance ----------------
+  distant-horizons:
+    display: "Distant Horizons"
+    category: PERFORMANCE
+    channels: ["distant_horizons:*", "distanthorizons:*"]
+
+  # These render-only mods register nothing and send no brand of their own.
+  # They are listed so profiles can reference them and so /clientpolicy rules
+  # can honestly report them as undetectable.
+  sodium:
+    display: "Sodium"
+    category: PERFORMANCE
+    channels: []
+
+  iris:
+    display: "Iris Shaders"
+    category: PERFORMANCE
+    channels: []

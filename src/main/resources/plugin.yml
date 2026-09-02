@@ -1,0 +1,40 @@
+name: ClientPolicy
+version: '${version}'
+main: com.craftpilot.clientpolicy.ClientPolicyPlugin
+api-version: '1.21'
+description: Server-side client mod fingerprinting with a transparent, tiered policy engine.
+author: XenbleDev
+website: https://modrinth.com/plugin/clientpolicy
+folia-supported: false
+
+libraries:
+  - org.xerial:sqlite-jdbc:3.46.1.3
+
+commands:
+  clientpolicy:
+    description: ClientPolicy root command.
+    aliases: [cp]
+    usage: /clientpolicy <rules|check|inspect|history|profile|rescan|reload>
+
+permissions:
+  clientpolicy.rules:
+    description: See the allowed/denied mod list of your own profile.
+    default: true
+  clientpolicy.check:
+    description: See what the server detects on your own client.
+    default: true
+  clientpolicy.admin:
+    description: Access to inspect, history, profile, rescan and reload.
+    default: op
+  clientpolicy.bypass:
+    description: Exempt from every enforcement action (detections are still recorded).
+    default: false
+  clientpolicy.notify:
+    description: Receive in-game notifications when a violation is detected.
+    default: op
+  clientpolicy.profile.default:
+    description: Explicitly bind a player to the 'default' policy profile.
+    default: false
+  clientpolicy.profile.builder:
+    description: Bind a player to the 'builder' policy profile.
+    default: false
